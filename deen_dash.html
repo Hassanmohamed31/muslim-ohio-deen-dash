@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deen Dash - Polished V4.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Press Start 2P', cursive;
+            overscroll-behavior: none;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            image-rendering: pixelated;
+        }
+        .view { display: none; }
+        .active-view { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        .game-container {
+            background-color: #34495e;
+            padding: 20px; /* Base padding */
+            border: 4px solid #ecf0f1;
+            box-shadow: 0 0 0 4px #2c3e50, 0 0 15px rgba(0,0,0,0.5) inset;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
+        }
+        @media (min-width: 640px) { /* sm */
+            .game-container { padding: 30px; }
+        }
+         @media (min-width: 768px) { /* md */
+            .game-container { padding: 40px; }
+        }
+
+
+        h1 { /* Homepage Title */
+            color: #f1c40f;
+            font-size: 2em; /* Increased base mobile */
+            text-shadow: 3px 3px 0px #1a252f;
+            margin-bottom: 0.75em; /* Increased bottom margin */
+            margin-top: 0.25em; 
+        }
+        @media (min-width: 640px) { h1 { font-size: 2.8em; } }
+        @media (min-width: 768px) { h1 { font-size: 3.2em; } }
+        @media (min-width: 1024px) { h1 { font-size: 3.8em; } }
+
+        .home-paragraph {
+            font-size: 0.85em; /* Slightly increased base */
+            color: #ecf0f1; 
+            margin-bottom: 1.25rem; 
+        }
+        @media (min-width: 640px) { .home-paragraph { font-size: 1em; } }
+        @media (min-width: 768px) { .home-paragraph { font-size: 1.1em; } }
+        
+        .session-high-score-home {
+            font-size: 0.75em; /* Slightly increased base */
+            color: #bdc3c7; 
+            margin-bottom: 2rem; /* Increased spacing before buttons */
+        }
+         @media (min-width: 640px) { .session-high-score-home { font-size: 0.85em; } }
+         @media (min-width: 768px) { .session-high-score-home { font-size: 0.9em; } }
+
+
+        .btn {
+            font-family: 'Press Start 2P', cursive;
+            padding: 10px 15px; 
+            font-size: 0.8em; 
+            border: 3px solid #2c3e50;
+            border-radius: 4px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.1s ease-in-out;
+            box-shadow: 4px 4px 0px #1a252f;
+            line-height: 1.2;
+        }
+        @media (min-width: 640px) { .btn { padding: 12px 20px; font-size: 0.9em; } }
+        @media (min-width: 768px) { .btn { padding: 14px 24px; font-size: 1em; } }
+
+        .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #1a252f; }
+        .btn-primary { background-color: #e67e22; color: #ffffff; }
+        .btn-primary:hover { background-color: #d35400; }
+        .btn-secondary { background-color: #3498db; color: #ffffff; }
+        .btn-secondary:hover { background-color: #2980b9; }
+        
+        .game-header { /* Container for Score, Time, Pause */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 0.5rem; /* Space before streak display */
+            position: relative; /* For absolute positioning of pause button */
+            min-height: 40px; /* Ensure enough height for larger score/time */
+        }
+        .game-header-item { /* For Score and Time */
+            font-size: 1em; /* Base size */
+            color: #ecf0f1;
+        }
+         .game-header-item span { /* The actual score/time value */
+            color: #f1c40f; /* Yellow for values */
+            font-size: 1.3em; /* Larger value */
+            margin-left: 0.25em;
+        }
+        @media (min-width: 640px) { 
+            .game-header-item { font-size: 1.1em; }
+            .game-header-item span { font-size: 1.4em; }
+        }
+         @media (min-width: 768px) { 
+            .game-header-item { font-size: 1.2em; }
+            .game-header-item span { font-size: 1.5em; }
+        }
+
+
+        .btn-pause {
+            background-color: #f1c40f; color: #2c3e50; padding: 6px 10px; 
+            font-size: 0.7em; 
+            /* position: absolute; top: 0px; right: 0px; */ /* Adjusted positioning within flex */
+        }
+        .btn-pause:hover { background-color: #f39c12; }
+
+        .modal-overlay, .pause-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.8); 
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content, .pause-content {
+            background-color: #34495e; color: #ecf0f1; padding: 2rem; border-radius: 8px;
+            border: 4px solid #ecf0f1; box-shadow: 0 0 0 4px #2c3e50, 0 0 15px rgba(0,0,0,0.5) inset;
+            width: 90%; max-width: 500px; text-align: center;
+        }
+        .modal-content h2, .pause-content h2 { color: #f1c40f; font-size: 1.8em; margin-bottom: 1em; }
+        .modal-content ul { list-style-type: none; padding-left: 0; text-align: left; }
+        .modal-content li { margin-bottom: 0.5em; }
+        .modal-content li::before { content: "> "; color: #f1c40f; margin-right: 0.5em; }
+
+        .answer-btn { background-color: #9b59b6; color: #ffffff; width: 100%; margin-bottom: 10px; }
+        .answer-btn:hover:not(:disabled) { background-color: #8e44ad; }
+        .answer-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .answer-btn.correct { background-color: #2ecc71 !important; color: #ffffff !important; }
+        .answer-btn.correct:hover:not(:disabled) { background-color: #27ae60 !important; }
+        .answer-btn.incorrect { background-color: #e74c3c !important; color: #ffffff !important; }
+        .answer-btn.incorrect:hover:not(:disabled) { background-color: #c0392b !important; }
+        .answer-btn.disabled-correct { background-color: #2ecc71 !important; opacity: 0.7 !important; }
+
+        .timer-bar-container { width: 100%; height: 24px; background-color: #2c3e50; border: 3px solid #ecf0f1; border-radius: 4px; overflow: hidden; margin-bottom: 1rem; padding: 2px; }
+        .timer-bar-fill { height: 100%; background-color: #2ecc71; width: 100%; transition: width 0.05s linear, background-color 0.2s linear; border-radius: 2px; }
+        .timer-bar-fill.medium-time { background-color: #f1c40f; }
+        .timer-bar-fill.low-time { background-color: #e74c3c; }
+        .timer-bar-fill.urgent { animation: pulse-red 0.7s infinite alternate; }
+
+        @keyframes pulse-red { from { background-color: #e74c3c; } to { background-color: #c0392b; } }
+        
+        .time-text-urgent { animation: pulse-text-yellow 0.7s infinite alternate; color: #f1c40f !important; }
+        @keyframes pulse-text-yellow { from { opacity: 1; transform: scale(1.05); } to { opacity: 0.7; transform: scale(1); } }
+
+        #game-over-view h2 { color: #f1c40f; font-size: 1.8em; text-shadow: 3px 3px 0px #1a252f; margin-top: 1em; }
+        @media (min-width: 640px) { #game-over-view h2 { font-size: 2.2em; } }
+        @media (min-width: 768px) { #game-over-view h2 { font-size: 2.5em; } }
+
+
+        #question-category { color: #3498db; font-size: 0.8em; margin-bottom: 0.5em; }
+        #question-text { font-size: 1.1em; min-height: 80px; line-height: 1.4; color: #ffffff; }
+        @media (min-width: 640px) { #question-text { font-size: 1.2em; } }
+
+        #score.score-pop { transform: scale(1.3); color: #2ecc71; } /* scoreDisplay span is #score */
+        /* #score itself is the span, so the parent div needs styling for "Score: " text */
+        
+        #final-score, #session-high-score-gameover { color: #f1c40f; font-size: 1.1em; }
+         @media (min-width: 640px) { 
+            #final-score, #session-high-score-gameover { font-size: 1.2em; }
+        }
+
+
+        #feedback-message { font-size: 1em; min-height: 30px; }
+        .feedback-correct { color: #2ecc71; }
+        .feedback-incorrect { color: #e74c3c; }
+        
+        #streak-display {
+            font-size: 0.9em; color: #f1c40f; margin-top: 0.25rem; /* Reduced top margin */
+            margin-bottom: 0.75rem; /* Added bottom margin before timer bar */
+            min-height: 20px; transition: opacity 0.3s ease;
+        }
+        #streak-display.streak-active { animation: pulse-streak 1s infinite alternate; }
+        @keyframes pulse-streak { from { opacity: 1; transform: scale(1.05); } to { opacity: 0.8; transform: scale(1); } }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.8em; }
+            #game-over-view h2 { font-size: 1.6em; }
+            #question-text { font-size: 1em; }
+            .btn { font-size: 0.7em; padding: 8px 12px;}
+            .game-header-item { font-size: 0.9em; }
+            .game-header-item span { font-size: 1.2em; }
+            .btn-pause {font-size: 0.6em; padding: 4px 8px; /* top: 15px; right: 15px; */}
+            .modal-content h2, .pause-content h2 { font-size: 1.3em; }
+            .modal-content li { font-size: 0.9em; }
+            .session-high-score-home { font-size: 0.65em; }
+            #streak-display { font-size: 0.8em; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-2 sm:p-4">
+
+    <div id="app-container" class="w-full max-w-2xl mx-auto"> 
+        <div id="home-view" class="view active-view game-container text-center space-y-4 py-10 md:py-16"> <h1>Deen Dash</h1>
+            <p class="home-paragraph">Test your Islamic knowledge!</p>
+            <p id="session-high-score-home-display" class="session-high-score-home">Session High: 0</p>
+            <div class="space-y-4 sm:space-y-0 sm:flex sm:flex-col sm:items-center sm:space-x-0">
+                <button id="start-game-btn" class="btn btn-primary w-full sm:w-4/5 md:w-3/4 mb-4">Start Game</button>
+                <button id="instructions-btn" class="btn btn-secondary w-full sm:w-4/5 md:w-3/4">How to Play</button>
+            </div>
+        </div>
+
+        <div id="instructions-modal" class="modal-overlay hidden">
+            <div class="modal-content space-y-4">
+                <h2>How to Play</h2>
+                <ul class="space-y-2 text-sm">
+                    <li>Answer questions from various Islamic categories.</li>
+                    <li>Each question has a timer. Answer before it runs out!</li>
+                    <li>The timer will get shorter as you progress.</li>
+                    <li>Score more points by answering FASTER!</li>
+                    <li>Get 3+ correct answers in a row for a STREAK BONUS!</li>
+                    <li>If you answer incorrectly or run out of time, the game ends.</li>
+                    <li>Use the PAUSE button if you need a break.</li>
+                    <li>Try to beat your Session High Score!</li>
+                </ul>
+                <button id="close-instructions-btn" class="btn btn-primary w-full mt-4">Got it!</button>
+            </div>
+        </div>
+
+        <div id="game-view" class="view game-container w-full space-y-3"> 
+            <div class="game-header">
+                <div class="game-header-item">Score: <span id="score">0</span></div>
+                <div class="game-header-item">Time: <span id="time-left-display">15.0</span></div> 
+                <button id="pause-btn" class="btn btn-pause">PAUSE</button>
+            </div>
+            <div id="streak-display" class="text-center"></div>
+            <div class="timer-bar-container">
+                <div id="timer-bar-fill" class="timer-bar-fill"></div>
+            </div>
+            <div id="question-container" class="text-center space-y-4">
+                <p id="question-category" class="text-xs uppercase tracking-wider"></p>
+                <p id="question-text" class="text-lg font-semibold min-h-[80px] flex items-center justify-center"></p>
+                <div id="answer-options" class="grid grid-cols-1 gap-3 pt-2"></div>
+            </div>
+            <div id="feedback-message" class="mt-3 text-center font-semibold text-base min-h-[24px]"></div>
+        </div>
+        
+        <div id="pause-overlay" class="pause-overlay hidden">
+            <div class="pause-content space-y-6">
+                <h2>PAUSED</h2>
+                <button id="resume-btn" class="btn btn-primary w-full sm:w-3/4">Resume</button>
+            </div>
+        </div>
+
+        <div id="game-over-view" class="view game-container text-center space-y-4 py-10 md:py-16"> <h2>Game Over!</h2>
+            <p class="text-lg sm:text-xl">Final Score: <span id="final-score" class="font-bold">0</span></p>
+            <p class="text-base sm:text-lg">Session High: <span id="session-high-score-gameover" class="font-bold">0</span></p>
+            <button id="play-again-btn" class="btn btn-primary w-full sm:w-3/4 mt-6">Play Again</button> </div>
+    </div>
+
+    <script>
+        // --- DOM Elements ---
+        const homeView = document.getElementById('home-view');
+        const gameView = document.getElementById('game-view');
+        const gameOverView = document.getElementById('game-over-view');
+        const instructionsModal = document.getElementById('instructions-modal');
+        const pauseOverlay = document.getElementById('pause-overlay');
+
+        const instructionsBtn = document.getElementById('instructions-btn');
+        const closeInstructionsBtn = document.getElementById('close-instructions-btn');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const playAgainBtn = document.getElementById('play-again-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const resumeBtn = document.getElementById('resume-btn');
+
+        const scoreDisplay = document.getElementById('score'); // This is the SPAN for the number
+        const timeLeftDisplay = document.getElementById('time-left-display'); 
+        const timerBarFill = document.getElementById('timer-bar-fill');
+        const questionCategoryDisplay = document.getElementById('question-category');
+        const questionTextDisplay = document.getElementById('question-text');
+        const answerOptionsContainer = document.getElementById('answer-options');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const feedbackMessageDisplay = document.getElementById('feedback-message');
+        const streakDisplay = document.getElementById('streak-display'); 
+        const sessionHighScoreHomeDisplay = document.getElementById('session-high-score-home-display'); 
+        const sessionHighScoreGameOverDisplay = document.getElementById('session-high-score-gameover'); 
+
+
+        // --- Game State Variables ---
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timerIntervalId; 
+        let timeLeftInTenths = 0; 
+        let initialTimerDurationInSeconds = 15; 
+        let currentTimerDurationInSeconds = 15; 
+        const minTimerDurationInSeconds = 5; 
+        const timerDecrementAmountInSeconds = 1; 
+        let questions = [];
+        let isPaused = false;
+        const POINTS_PER_CORRECT_ANSWER = 10; 
+        const POINTS_PER_SECOND_LEFT = 1;   
+        
+        let currentStreak = 0;
+        const STREAK_THRESHOLD = 3; 
+        const STREAK_BONUS_POINTS = 25; 
+        let sessionHighScore = 0;
+
+
+        // --- Question Data (V2 - 10 questions per category, remains same) ---
+        const allQuestions = [
+            // Halal or Haram (10)
+            { category: "Halal or Haram", questionText: "Is eating pork Halal or Haram?", options: ["Halal", "Haram"], correctAnswer: "Haram" },
+            { category: "Halal or Haram", questionText: "Is consuming alcohol Halal or Haram?", options: ["Halal", "Haram"], correctAnswer: "Haram" },
+            { category: "Halal or Haram", questionText: "Is eating fish with scales generally Halal or Haram?", options: ["Halal", "Haram"], correctAnswer: "Halal" },
+            { category: "Halal or Haram", questionText: "Is backbiting (Gheebah) Halal or Haram?", options: ["Halal", "Haram"], correctAnswer: "Haram" },
+            { category: "Halal or Haram", questionText: "Is earning interest (Riba) Halal or Haram?", options: ["Halal", "Haram"], correctAnswer: "Haram" },
+            { category: "Halal or Haram", questionText: "Is consuming carrion (animals found dead) Halal or Haram?", options: ["Halal", "Haram"], correctAnswer: "Haram" },
+            { category: "Halal or Haram", questionText: "Is it Halal or Haram to engage in gambling (Maysir)?", options: ["Halal", "Haram"], correctAnswer: "Haram" },
+            { category: "Halal or Haram", questionText: "Is it Halal or Haram for men to wear pure silk clothing?", options: ["Halal", "Haram"], correctAnswer: "Haram" },
+            { category: "Halal or Haram", questionText: "Is eating food that has been dedicated to idols Halal or Haram?", options: ["Halal", "Haram"], correctAnswer: "Haram" },
+            { category: "Halal or Haram", questionText: "Is it Halal or Haram to spread rumors or slander?", options: ["Halal", "Haram"], correctAnswer: "Haram" },
+
+            // Common Phrases (10)
+            { category: "Common Phrases", questionText: "What do you say before starting an action, like eating?", options: ["Bismillah", "Alhamdulillah", "Ma sha Allah"], correctAnswer: "Bismillah" },
+            { category: "Common Phrases", questionText: "What do you say after finishing a meal to express gratitude?", options: ["Bismillah", "Alhamdulillah", "Ma sha Allah"], correctAnswer: "Alhamdulillah" },
+            { category: "Common Phrases", questionText: "What do you say when you see something beautiful or are impressed by something, to attribute it to God's will?", options: ["Bismillah", "Alhamdulillah", "Ma sha Allah"], correctAnswer: "Ma sha Allah" },
+            { category: "Common Phrases", questionText: "What do you say when you sneeze?", options: ["SubhanAllah", "Alhamdulillah", "Allahu Akbar"], correctAnswer: "Alhamdulillah" },
+            { category: "Common Phrases", questionText: "To express thanks and praise to Allah for His blessings, one should say:", options: ["Astaghfirullah", "Alhamdulillah", "InshaAllah"], correctAnswer: "Alhamdulillah" },
+            { category: "Common Phrases", questionText: "What phrase is often said when making a future plan, meaning 'If Allah wills'?", options: ["SubhanAllah", "InshaAllah", "MashaAllah"], correctAnswer: "InshaAllah" },
+            { category: "Common Phrases", questionText: "What do you say to seek forgiveness from Allah?", options: ["Astaghfirullah", "Allahu Akbar", "SubhanAllah"], correctAnswer: "Astaghfirullah" },
+            { category: "Common Phrases", questionText: "What is said to praise Allah's perfection, often translated as 'Glory be to Allah'?", options: ["Alhamdulillah", "SubhanAllah", "La ilaha illa Allah"], correctAnswer: "SubhanAllah" },
+            { category: "Common Phrases", questionText: "When someone does something good for you, what can you say to them, meaning 'May Allah reward you with good'?", options: ["Shukran", "BarakAllah Feek", "JazakAllah Khair"], correctAnswer: "JazakAllah Khair" },
+            { category: "Common Phrases", questionText: "What phrase means 'Allah is the Greatest'?", options: ["Allahu Akbar", "Alhamdulillah", "SubhanAllah"], correctAnswer: "Allahu Akbar" },
+            
+            // Prophet Muhammad (PBUH) (10)
+            { category: "Prophet Muhammad (PBUH)", questionText: "What is the name of Prophet Muhammad's (PBUH) paternal grandfather?", options: ["Abu Talib", "Abdullah", "Abdul-Muttalib"], correctAnswer: "Abdul-Muttalib" },
+            { category: "Prophet Muhammad (PBUH)", questionText: "In which city was Prophet Muhammad (PBUH) born?", options: ["Madinah", "Makkah", "Jerusalem"], correctAnswer: "Makkah" },
+            { category: "Prophet Muhammad (PBUH)", questionText: "What is the name of the cave where Prophet Muhammad (PBUH) received the first revelation?", options: ["Thawr", "Hira", "Uhud"], correctAnswer: "Hira" },
+            { category: "Prophet Muhammad (PBUH)", questionText: "Who was the first wife of Prophet Muhammad (PBUH)?", options: ["Aisha (RA)", "Khadijah (RA)", "Fatimah (RA)"], correctAnswer: "Khadijah (RA)" },
+            { category: "Prophet Muhammad (PBUH)", questionText: "To which city did Prophet Muhammad (PBUH) migrate (Hijra)?", options: ["Ta'if", "Madinah", "Damascus"], correctAnswer: "Madinah" },
+            { category: "Prophet Muhammad (PBUH)", questionText: "What was the name of Prophet Muhammad's (PBUH) mother?", options: ["Aminah", "Halimah", "Fatimah"], correctAnswer: "Aminah" },
+            { category: "Prophet Muhammad (PBUH)", questionText: "What title was Prophet Muhammad (PBUH) known by, meaning 'The Trustworthy'?", options: ["Al-Sadiq", "Al-Amin", "Al-Farooq"], correctAnswer: "Al-Amin" },
+            { category: "Prophet Muhammad (PBUH)", questionText: "How old was Prophet Muhammad (PBUH) when he received the first revelation?", options: ["25", "40", "50"], correctAnswer: "40" },
+            { category: "Prophet Muhammad (PBUH)", questionText: "What is the name of the Prophet Muhammad's (PBUH) famous sermon delivered during Hajj?", options: ["Sermon on the Mount", "The Farewell Sermon", "Medina Charter"], correctAnswer: "The Farewell Sermon" },
+            { category: "Prophet Muhammad (PBUH)", questionText: "Which companion is known as 'As-Siddiq' (The Truthful) and was the first Caliph?", options: ["Umar ibn Al-Khattab (RA)", "Ali ibn Abi Talib (RA)", "Abu Bakr (RA)"], correctAnswer: "Abu Bakr (RA)" },
+
+            // Pillars of Islam (10)
+            { category: "Pillars of Islam", questionText: "How many Pillars of Islam are there?", options: ["Three", "Five", "Seven"], correctAnswer: "Five" },
+            { category: "Pillars of Islam", questionText: "What is the first Pillar of Islam (Declaration of Faith)?", options: ["Salat", "Zakat", "Shahada"], correctAnswer: "Shahada" },
+            { category: "Pillars of Islam", questionText: "What is the term for the obligatory charity in Islam?", options: ["Sadaqah", "Zakat", "Khums"], correctAnswer: "Zakat" },
+            { category: "Pillars of Islam", questionText: "During which Islamic month do Muslims fast?", options: ["Shawwal", "Ramadan", "Dhul-Hijjah"], correctAnswer: "Ramadan" },
+            { category: "Pillars of Islam", questionText: "What is the pilgrimage to Makkah called?", options: ["Umrah", "Hajj", "Ziyarah"], correctAnswer: "Hajj" },
+            { category: "Pillars of Islam", questionText: "How many daily prayers (Salat) are obligatory for a Muslim?", options: ["Three", "Five", "Six"], correctAnswer: "Five" },
+            { category: "Pillars of Islam", questionText: "In which direction do Muslims face when performing Salat?", options: ["Jerusalem", "Qibla (Kaaba)", "East"], correctAnswer: "Qibla (Kaaba)" },
+            { category: "Pillars of Islam", questionText: "What does the Shahada testify to?", options: ["Oneness of Allah & Prophethood of Muhammad (PBUH)", "Charity and Fasting", "Pilgrimage"], correctAnswer: "Oneness of Allah & Prophethood of Muhammad (PBUH)" },
+            { category: "Pillars of Islam", questionText: "Is fasting in Ramadan obligatory for all Muslims, or are there exceptions?", options: ["No exceptions", "Exceptions exist", "Only for adults"], correctAnswer: "Exceptions exist" },
+            { category: "Pillars of Islam", questionText: "Can Hajj be performed at any time of the year?", options: ["Yes, anytime", "No, specific days", "Only in Ramadan"], correctAnswer: "No, specific days" },
+            
+            // Quran (10)
+            { category: "Quran", questionText: "How many Surahs (chapters) are there in the Quran?", options: ["100", "114", "120"], correctAnswer: "114" },
+            { category: "Quran", questionText: "What is the first Surah of the Quran?", options: ["Al-Baqarah", "Al-Fatiha", "Yasin"], correctAnswer: "Al-Fatiha" },
+            { category: "Quran", questionText: "In what language was the Quran revealed?", options: ["Hebrew", "Aramaic", "Arabic"], correctAnswer: "Arabic" },
+            { category: "Quran", questionText: "Who is the angel who revealed the Quran to Prophet Muhammad (PBUH)?", options: ["Mika'il (Michael)", "Jibril (Gabriel)", "Israfil"], correctAnswer: "Jibril (Gabriel)" },
+            { category: "Quran", questionText: "What is the longest Surah in the Quran?", options: ["Al-Imran", "Al-Baqarah", "An-Nisa"], correctAnswer: "Al-Baqarah" },
+            { category: "Quran", questionText: "What is the term for a verse in the Quran?", options: ["Juz", "Ayah", "Ruku"], correctAnswer: "Ayah" },
+            { category: "Quran", questionText: "Approximately how many years did it take for the entire Quran to be revealed?", options: ["10 years", "23 years", "30 years"], correctAnswer: "23 years" },
+            { category: "Quran", questionText: "Which Surah is known as the 'Heart of the Quran'?", options: ["Surah Al-Mulk", "Surah Ar-Rahman", "Surah Yasin"], correctAnswer: "Surah Yasin" },
+            { category: "Quran", questionText: "What is the act of reciting the Quran with proper pronunciation and rules called?", options: ["Tafsir", "Tajweed", "Tarteel"], correctAnswer: "Tajweed" },
+            { category: "Quran", questionText: "Is the Quran believed by Muslims to be the literal word of God?", options: ["Yes", "No", "Partially"], correctAnswer: "Yes" }
+        ];
+
+        // --- Utility Functions ---
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(view => {
+                view.classList.remove('active-view');
+                view.classList.add('hidden');
+            });
+            const targetView = document.getElementById(viewId);
+            if (targetView) {
+                targetView.classList.add('active-view');
+                targetView.classList.remove('hidden');
+            }
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // --- UI Functions ---
+        function showInstructions() { instructionsModal.classList.remove('hidden'); }
+        function hideInstructions() { instructionsModal.classList.add('hidden'); }
+
+        function updateTimerDisplay() {
+            const displayTime = (timeLeftInTenths / 10).toFixed(1);
+            timeLeftDisplay.textContent = displayTime;
+            const percentage = (timeLeftInTenths / (currentTimerDurationInSeconds * 10)) * 100;
+            timerBarFill.style.width = `${percentage}%`;
+
+            timerBarFill.classList.remove('low-time', 'medium-time', 'urgent'); 
+            timeLeftDisplay.classList.remove('time-text-urgent');
+
+            if (percentage < 25) { 
+                timerBarFill.classList.add('urgent'); 
+                timeLeftDisplay.classList.add('time-text-urgent'); 
+            } else if (percentage < 50) { 
+                timerBarFill.classList.add('low-time'); 
+            } else if (percentage < 75) { 
+                timerBarFill.classList.add('medium-time'); 
+            }
+        }
+        
+        function triggerScorePop() {
+            const scoreElement = document.getElementById('score'); // Get the span directly
+            scoreElement.classList.add('score-pop');
+            setTimeout(() => {
+                scoreElement.classList.remove('score-pop');
+            }, 300); 
+        }
+
+        function updateStreakDisplay() {
+            if (currentStreak >= STREAK_THRESHOLD) {
+                streakDisplay.textContent = `STREAK: ${currentStreak}x (+${STREAK_BONUS_POINTS} Bonus!)`;
+                streakDisplay.classList.add('streak-active');
+            } else if (currentStreak > 0) {
+                streakDisplay.textContent = `Streak: ${currentStreak}x`;
+                streakDisplay.classList.remove('streak-active');
+            } else {
+                streakDisplay.textContent = '';
+                streakDisplay.classList.remove('streak-active');
+            }
+        }
+        
+        function updateSessionHighScoreDisplay() {
+            sessionHighScoreHomeDisplay.textContent = `Session High: ${sessionHighScore}`;
+            sessionHighScoreGameOverDisplay.textContent = sessionHighScore;
+        }
+
+
+        function showFeedback(message, isCorrect) {
+            feedbackMessageDisplay.textContent = message;
+            feedbackMessageDisplay.classList.remove('feedback-correct', 'feedback-incorrect'); 
+            if (isCorrect) {
+                feedbackMessageDisplay.classList.add('feedback-correct');
+            } else {
+                feedbackMessageDisplay.classList.add('feedback-incorrect');
+            }
+        }
+        
+        function togglePause(shouldPause) {
+            isPaused = shouldPause;
+            if (isPaused) {
+                clearTimeout(timerIntervalId);
+                pauseOverlay.classList.remove('hidden');
+                pauseOverlay.classList.add('active-view'); 
+            } else {
+                pauseOverlay.classList.add('hidden');
+                pauseOverlay.classList.remove('active-view');
+                startTimer(); 
+            }
+        }
+
+        // --- Game Logic Functions ---
+        function startGame() {
+            score = 0;
+            currentQuestionIndex = 0;
+            currentTimerDurationInSeconds = initialTimerDurationInSeconds;
+            questions = [...allQuestions];
+            shuffleArray(questions);
+            isPaused = false; 
+            currentStreak = 0; 
+
+            scoreDisplay.textContent = score; // scoreDisplay is the span
+            feedbackMessageDisplay.textContent = ''; 
+            pauseOverlay.classList.add('hidden'); 
+            updateStreakDisplay(); 
+            updateSessionHighScoreDisplay(); 
+            showView('game-view');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearTimeout(timerIntervalId);
+            if (isPaused) return; 
+
+            updateStreakDisplay(); 
+
+            if (currentQuestionIndex < questions.length) {
+                const question = questions[currentQuestionIndex];
+                questionCategoryDisplay.textContent = question.category;
+                questionTextDisplay.textContent = question.questionText;
+
+                answerOptionsContainer.innerHTML = '';
+                question.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add('btn', 'answer-btn'); 
+                    button.onclick = () => selectAnswer(option, button);
+                    answerOptionsContainer.appendChild(button);
+                });
+
+                timeLeftInTenths = currentTimerDurationInSeconds * 10;
+                updateTimerDisplay(); 
+                startTimer();
+            } else {
+                endGame(true); 
+            }
+        }
+
+        function selectAnswer(selectedOption, buttonElement) {
+            if (isPaused) return; 
+            clearTimeout(timerIntervalId);
+            const question = questions[currentQuestionIndex];
+            const answerButtons = answerOptionsContainer.querySelectorAll('.answer-btn');
+            answerButtons.forEach(btn => { btn.disabled = true; });
+
+            let pointsEarnedThisTurn = 0;
+
+            if (selectedOption === question.correctAnswer) {
+                currentStreak++;
+                pointsEarnedThisTurn = POINTS_PER_CORRECT_ANSWER + Math.floor(timeLeftInTenths / 10) * POINTS_PER_SECOND_LEFT;
+                
+                let streakBonusApplied = 0;
+                if (currentStreak >= STREAK_THRESHOLD) {
+                    streakBonusApplied = STREAK_BONUS_POINTS;
+                    pointsEarnedThisTurn += streakBonusApplied;
+                }
+                
+                score += pointsEarnedThisTurn;
+                scoreDisplay.textContent = score; // scoreDisplay is the span
+                triggerScorePop(); 
+                buttonElement.classList.add('correct');
+                
+                let feedbackText = `Correct! +${pointsEarnedThisTurn - streakBonusApplied}`;
+                if (streakBonusApplied > 0) {
+                    feedbackText += ` (Streak Bonus +${streakBonusApplied}!)`;
+                }
+                showFeedback(feedbackText, true);
+                updateStreakDisplay();
+
+
+                currentQuestionIndex++;
+                if (currentTimerDurationInSeconds > minTimerDurationInSeconds) {
+                    currentTimerDurationInSeconds -= timerDecrementAmountInSeconds;
+                    if (currentTimerDurationInSeconds < minTimerDurationInSeconds) {
+                        currentTimerDurationInSeconds = minTimerDurationInSeconds;
+                    }
+                }
+                
+                if (currentQuestionIndex >= questions.length) {
+                     setTimeout(() => endGame(true), 1800); 
+                } else {
+                    setTimeout(loadQuestion, 1800); 
+                }
+
+            } else { 
+                currentStreak = 0; 
+                updateStreakDisplay();
+                buttonElement.classList.add('incorrect');
+                showFeedback(`Oops! Correct: ${question.correctAnswer}`, false);
+                answerButtons.forEach(btn => {
+                    if (btn.textContent === question.correctAnswer) {
+                        btn.classList.add('disabled-correct'); 
+                    }
+                });
+                setTimeout(() => endGame(false), 1800); 
+            }
+        }
+
+        function startTimer() {
+            if (isPaused) return; 
+            clearTimeout(timerIntervalId); 
+            
+            timerIntervalId = setInterval(() => {
+                if (isPaused) { 
+                    clearTimeout(timerIntervalId);
+                    return;
+                }
+                timeLeftInTenths--;
+                updateTimerDisplay();
+                if (timeLeftInTenths <= 0) {
+                    clearTimeout(timerIntervalId);
+                    currentStreak = 0; 
+                    updateStreakDisplay();
+                    showFeedback(`Time UP! Ans: ${questions[currentQuestionIndex].correctAnswer}`, false);
+                    
+                    const answerButtons = answerOptionsContainer.querySelectorAll('.answer-btn');
+                    answerButtons.forEach(btn => {
+                        btn.disabled = true;
+                        if (btn.textContent === questions[currentQuestionIndex].correctAnswer) {
+                             btn.classList.add('disabled-correct');
+                        }
+                    });
+                    setTimeout(() => endGame(false), 1800); 
+                }
+            }, 100); 
+        }
+
+        function endGame(isWin) { 
+            clearTimeout(timerIntervalId);
+            isPaused = false; 
+            pauseOverlay.classList.add('hidden'); 
+            
+            if (score > sessionHighScore) {
+                sessionHighScore = score;
+            }
+            updateSessionHighScoreDisplay();
+            finalScoreDisplay.textContent = score;
+            currentStreak = 0; 
+            updateStreakDisplay(); 
+            showView('game-over-view');
+        }
+
+        // --- Event Listeners ---
+        instructionsBtn.addEventListener('click', showInstructions);
+        closeInstructionsBtn.addEventListener('click', hideInstructions);
+        startGameBtn.addEventListener('click', startGame);
+        playAgainBtn.addEventListener('click', startGame); 
+        pauseBtn.addEventListener('click', () => togglePause(true));
+        resumeBtn.addEventListener('click', () => togglePause(false));
+
+        // --- Initial Setup ---
+        updateSessionHighScoreDisplay(); 
+        showView('home-view');
+
+    </script>
+</body>
+</html>
